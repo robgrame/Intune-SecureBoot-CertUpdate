@@ -22,7 +22,7 @@ Detection script — checks (in order):
 5. **UEFI CA 2023 certificate** — if already present, exits compliant
 6. **Registry key** — if `AvailableUpdates` is already `0x5944`, exits compliant
 
-Exit codes: `0` = non-compliant (needs remediation) | `1` = compliant
+Exit codes: `0` = compliant (no remediation) | `1` = non-compliant (triggers remediation)
 
 ### `Remediate-SecureBootCertUpdate.ps1`
 Remediation script — after safety checks (Secure Boot, manufacturer, model, BIOS), sets:

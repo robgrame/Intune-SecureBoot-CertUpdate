@@ -19,8 +19,8 @@
     5. Checks if the 2023 certificate is already present in the active Secure Boot DB
     6. Checks if AvailableUpdates is already set to 0x5944
 
-    Exit 0 = Non-compliant (remediation needed)
-    Exit 1 = Compliant (no action needed)
+    Exit 0 = Compliant (no action needed)
+    Exit 1 = Non-compliant (triggers remediation)
 #>
 
 #region Configuration
@@ -131,7 +131,7 @@ try {
     # 1. Check if Secure Boot is enabled (if disabled, nothing to do)
     if (-not (Test-SecureBootEnabled)) {
         Write-Output "Secure Boot is not enabled. No action required."
-        exit 1
+        exit 0
     }
     Write-Output "Secure Boot is enabled."
 
@@ -148,7 +148,7 @@ try {
         $dellModel = Get-DellModelMatch
         if (-not $dellModel) {
             Write-Output "Dell model '$deviceModel' is not in the supported list. No action required."
-            exit 1
+            exit 0
         }
         Write-Output "Matched Dell model: $dellModel"
 
@@ -160,7 +160,7 @@ try {
         }
         elseif ($currentBios -lt $requiredBios) {
             Write-Output "Dell BIOS $currentBios is below minimum $requiredBios. BIOS update required first."
-            exit 1
+            exit 0
         }
         else {
             Write-Output "Dell BIOS $currentBios meets minimum ($requiredBios)."
@@ -172,26 +172,26 @@ try {
         $lenovoEntry = Get-LenovoModelMatch
         if (-not $lenovoEntry) {
             Write-Output "Lenovo model '$deviceModel' is not in the supported list. No action required."
-            exit 1
+            exit 0
         }
         Write-Output "Matched Lenovo model prefix: $($lenovoEntry.ModelPrefix)"
 
         # 4b. Lenovo: check BIOS family and version
         if (-not (Test-LenovoBiosVersion -ModelEntry $lenovoEntry)) {
             Write-Output "Lenovo BIOS does not meet requirements. BIOS update required first."
-            exit 1
+            exit 0
         }
         $biosCheckPassed = $true
     }
     else {
         Write-Output "Manufacturer '$manufacturer' is not supported. No action required."
-        exit 1
+        exit 0
     }
 
     # 5. Check if 2023 certificate is already in active Secure Boot DB
     if (Test-UEFICA2023Present) {
         Write-Output "Windows UEFI CA 2023 certificate is already present. No action required."
-        exit 1
+        exit 0
     }
     Write-Output "Windows UEFI CA 2023 certificate NOT found in active DB."
 
@@ -206,15 +206,15 @@ try {
 
     if ($currentValue -eq $DesiredValue) {
         Write-Output "AvailableUpdates is already set to 0x5944. Update in progress or pending reboot."
-        exit 1
+        exit 0
     }
 
     # All checks passed - remediation is needed
     Write-Output "Remediation required: AvailableUpdates needs to be set to 0x5944."
-    exit 0
+    exit 1
 }
 catch {
     Write-Output "Detection error: $($_.Exception.Message)"
-    exit 1
+    exit 0
 }
 #endregion
