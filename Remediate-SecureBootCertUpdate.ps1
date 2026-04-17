@@ -159,6 +159,23 @@ try {
         exit 1
     }
 
+    # Check if update is already in progress or completed
+    $currentValue = $null
+    try {
+        $currentValue = Get-ItemPropertyValue -Path $RegistryPath -Name $RegistryName -ErrorAction Stop
+    }
+    catch { }
+
+    if ($currentValue -eq $DesiredValue) {
+        Write-Output "AvailableUpdates is already set to 0x5944. Update pending reboot. Remediation skipped."
+        exit 0
+    }
+
+    if ($currentValue -eq 0x4100 -or $currentValue -eq 0x4000) {
+        Write-Output "AvailableUpdates is 0x$($currentValue.ToString('X4')). Update already in progress or completed. Remediation skipped."
+        exit 0
+    }
+
     # Apply the registry change
     if (-not (Test-Path $RegistryPath)) {
         Write-Output "Registry path $RegistryPath does not exist. Cannot remediate."

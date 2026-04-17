@@ -205,7 +205,12 @@ try {
     }
 
     if ($currentValue -eq $DesiredValue) {
-        Write-Output "AvailableUpdates is already set to 0x5944. Update in progress or pending reboot."
+        Write-Output "AvailableUpdates is already set to 0x5944. Update pending reboot."
+        exit 0
+    }
+
+    if ($currentValue -eq 0x4100 -or $currentValue -eq 0x4000) {
+        Write-Output "AvailableUpdates is 0x$($currentValue.ToString('X4')). Update already in progress or completed."
         exit 0
     }
 
